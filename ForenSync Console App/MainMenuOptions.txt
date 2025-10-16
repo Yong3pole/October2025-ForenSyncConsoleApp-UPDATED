@@ -1,0 +1,37 @@
+case operations
+- view cases (case folders only, show only existing cases/folders) --optional
+- view mounted drives
+- capture memory --capture volatile artifacts optional
+- image/clone drive or partition
+
+tools
+- view running processes
+- list network connections
+- list usb devices / removable media
+
+device info
+- view system info
+- view disk layout
+- list user accounts
+- view installed applications
+
+Acquisition History & COC
+- Acquisition History
+- Export (Action)
+
+User Management (--Admin only--)
+- View all users
+- Register new user
+- Modify user
+- Session Logs
+
+Help
+- About ForenSync
+- Terms of Use
+- Privacy Policy
+- Contact Us
+
+
+Exit
+- Are you sure you want to exit? (Save and Close)
+

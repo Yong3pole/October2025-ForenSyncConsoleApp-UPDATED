@@ -1,0 +1,40 @@
+ForenSyncToolkit/
+│
+├── Acquisition/              # Memory capture, drive imaging, privilege checks
+│   ├── MemoryCapture.cs
+│   ├── DriveImager.cs
+│   ├── PrivilegeChecker.cs
+│
+├── CaseManagement/           # Case/session creation, continuation, SQLite logging
+│   ├── CaseSession.cs
+│   ├── CaseLogger.cs
+│   ├── SQLiteHandler.cs
+│
+├── Dispatcher/               # Event routing and mode handling
+│   ├── EventRouter.cs
+│   ├── ModeHandler.cs
+│
+├── Tools/                    # System inspection utilities
+│   ├── ProcessViewer.cs
+│   ├── NetworkScanner.cs
+│   ├── RemovableMediaLister.cs
+│
+├── UI/                       # CLI rendering, ASCII titles, prompts, login, menus
+│   ├── AsciiTitle.cs
+│   ├── PromptRenderer.cs
+│   ├── LoginPage.cs
+│   ├── MainMenu.cs
+│
+├── History/                  # Acquisition logs, session exports
+│   ├── AcquisitionHistory.cs
+│   ├── SessionExporter.cs
+│
+├── Help/                     # About, contact, usage info
+│   ├── About.cs
+│   ├── ContactInfo.cs
+│
+├── Utils/                    # Platform detection, logging, helpers
+│   ├── PlatformDetector.cs
+│   ├── Logger.cs
+│
+└── Program.cs                # Entry point, launches login and dispatcher
