@@ -120,10 +120,14 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.DeviceInfo_SubMenu
                 using var connection = new SqliteConnection($"Data Source={dbPath}");
                 connection.Open();
 
+                // Generate GUID for acquisition_id
+                string acquisitionId = Guid.NewGuid().ToString();
+
                 using var command = connection.CreateCommand();
                 command.CommandText = @"
-                    INSERT INTO acquisition_log (case_id, type, tool, output_path, hash, created_at, entry_hash)
-                    VALUES (@case_id, @type, @tool, @output_path, @hash, @created_at, @entry_hash)";
+                    INSERT INTO acquisition_log (acquisition_id, case_id, type, tool, output_path, hash, created_at, entry_hash)
+                    VALUES (@acquisition_id, @case_id, @type, @tool, @output_path, @hash, @created_at, @entry_hash);";
+                command.Parameters.AddWithValue("@acquisition_id", acquisitionId);
                 command.Parameters.AddWithValue("@case_id", caseId);
                 command.Parameters.AddWithValue("@type", "snapshot");
                 command.Parameters.AddWithValue("@tool", "ForenSync | ViewSystemInfo");

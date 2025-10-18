@@ -1,12 +1,16 @@
 ﻿using ForenSync.Utils;
 using Microsoft.Data.Sqlite;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.IO;
 using System.Management;
 using System.Text;
 using System.Security.Cryptography;
+using System.Security.Principal;
 
 namespace ForenSync_Console_App.UI.MainMenuOptions.DeviceInfo_SubMenu
 {
@@ -135,6 +139,9 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.DeviceInfo_SubMenu
                     hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
                 }
 
+                // Generate GUID for acquisition_id
+                string acquisitionId = Guid.NewGuid().ToString();
+
                 string outputPathRelative = Path.Combine("Cases", caseId, "Evidence", filename);
                 string createdAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 string canonicalEntry = $"{caseId}|snapshot|ForenSync | ViewInstalledApps|{outputPathRelative}|{hash}|{createdAt}";
@@ -146,8 +153,9 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.DeviceInfo_SubMenu
 
                 using var command = connection.CreateCommand();
                 command.CommandText = @"
-                    INSERT INTO acquisition_log (case_id, type, tool, output_path, hash, created_at, entry_hash)
-                    VALUES (@case_id, @type, @tool, @output_path, @hash, @created_at, @entry_hash)";
+                    INSERT INTO acquisition_log (acquisition_id, case_id, type, tool, output_path, hash, created_at, entry_hash)
+                    VALUES (@acquisition_id, @case_id, @type, @tool, @output_path, @hash, @created_at, @entry_hash);";
+                command.Parameters.AddWithValue("@acquisition_id", acquisitionId);
                 command.Parameters.AddWithValue("@case_id", caseId);
                 command.Parameters.AddWithValue("@type", "snapshot");
                 command.Parameters.AddWithValue("@tool", "ForenSync | ViewInstalledApps");

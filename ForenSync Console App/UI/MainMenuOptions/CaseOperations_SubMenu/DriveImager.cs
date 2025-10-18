@@ -3,8 +3,6 @@ using Microsoft.Data.Sqlite;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 using System;
-using System;
-using System.Collections.Generic;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;

@@ -11,6 +11,9 @@ class Program
 
     static void Main(string[] args)
     {
+
+        // Try add diri ang script tas pagset ug error handling kung di makita ang mounted drives, return an error message
+
         Console.OutputEncoding = Encoding.UTF8;
         Console.InputEncoding = Encoding.UTF8;
 
