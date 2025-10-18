@@ -1,19 +1,25 @@
-﻿using System;
+﻿using ForenSync.Utils;
+using Microsoft.Data.Sqlite;
+using Spectre.Console;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Text;
-using System.IO;
 using System.Security.Cryptography;
-using Spectre.Console;
-using ForenSync.Utils;
-using Microsoft.Data.Sqlite;
+using System.Text;
+using System.Xml.Linq;
 
 namespace ForenSync_Console_App.UI.MainMenuOptions.Tools_SubMenu
 {
     public static class ViewNetworkConnections
     {
+        private static string EscapeMarkup(string input)
+        {
+            return input.Replace("[", "[[").Replace("]", "]]");
+        }
+
         public static void Show(string currentCasePath, string userId)
         {
             AnsiConsole.Clear();
@@ -59,7 +65,13 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.Tools_SubMenu
                 var node = root.AddNode($"[green]{group.Key}[/] [grey]({group.Count()} connections)[/]");
                 foreach (var conn in group.Take(3))
                 {
-                    node.AddNode($"Local: {conn.LocalEndPoint} → State: {conn.State}");
+                    //node.AddNode($"Local: {conn.LocalEndPoint} → State: {conn.State}");
+                    // FIX 
+                    var childText = $"Local: {conn.LocalEndPoint} → State: {conn.State}";
+                    var childNode = new TreeNode(new Markup(EscapeMarkup(childText)));
+                    node.AddNode(childNode);
+
+
                 }
             }
 
@@ -76,12 +88,11 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.Tools_SubMenu
 
             foreach (var conn in connections)
             {
-                string local = $"{conn.LocalEndPoint.Address}:{conn.LocalEndPoint.Port}";
+                string local = conn.LocalEndPoint.ToString().Replace("[", "[[").Replace("]", "]]");
                 string remote = conn.RemoteEndPoint.Address.Equals(IPAddress.Any)
                     ? "N/A"
                     : $"{conn.RemoteEndPoint.Address}:{conn.RemoteEndPoint.Port}";
                 string state = conn.State.ToString();
-
                 table.AddRow(local, remote, state);
                 sb.AppendLine($"{local} | {remote} | {state}");
             }
