@@ -361,4 +361,3 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/ForenSync Console App/UI/MainMenuOptions/CaseOperations_SubMenu/CaseViewer.cs
