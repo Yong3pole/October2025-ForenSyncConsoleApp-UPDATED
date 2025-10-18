@@ -1,13 +1,72 @@
 ﻿using ForenSync_Console_App;
 using ForenSync_Console_App.UI;
 using ForenSync_Console_App.UI.MainMenuOptions.Help_SubMenu;
-using Spectre.Console;
 using System.IO;
 using System.Text;
+using Spectre.Console;
+using System.Threading;
 
 class Program
 {
     private const string TermsFileName = "terms.accepted";
+
+    private static void ShowWelcomeAnimation()
+    {
+        Console.CursorVisible = false;
+        Console.Clear();
+
+        string[] asciiArt = {
+        "███████╗░█████╗░██████╗░███████╗███╗░░██╗░██████╗██╗░░░██╗███╗░░██╗░█████╗░",
+        "██╔════╝██╔══██╗██╔══██╗██╔════╝████╗░██║██╔════╝╚██╗░██╔╝████╗░██║██╔══██╗",
+        "█████╗░░██║░░██║██████╔╝█████╗░░██╔██╗██║╚█████╗░░╚████╔╝░██╔██╗██║██║░░╚═╝",
+        "██╔══╝░░██║░░██║██╔══██╗██╔══╝░░██║╚████║░╚═══██╗░░╚██╔╝░░██║╚████║██║░░██╗",
+        "██║░░░░░╚█████╔╝██║░░██║███████╗██║░╚███║██████╔╝░░░██║░░░██║░╚███║╚█████╔╝",
+        "╚═╝░░░░░░╚════╝░╚═╝░░╚═╝╚══════╝╚═╝░░╚══╝╚═════╝░░░░╚═╝░░░╚═╝░░╚══╝░╚════╝░"
+    };
+
+        // Matrix-style vertical reveal
+        int maxLength = asciiArt.Max(line => line.Length);
+
+        for (int col = 0; col < maxLength; col++)
+        {
+            for (int row = 0; row < asciiArt.Length; row++)
+            {
+                if (col < asciiArt[row].Length)
+                {
+                    Console.SetCursorPosition(col, row);
+                    var color = GetMatrixColor(row, col);
+                    AnsiConsole.Markup($"[{color}]{asciiArt[row][col]}[/]");
+                }
+            }
+            Thread.Sleep(10);
+        }
+
+        ContinueWithSpinner();
+    }
+
+    private static string GetMatrixColor(int row, int col)
+    {
+        var colors = new[] { "green", "lime", "white", "grey" };
+        var random = new Random((row * 1000) + col);
+        return colors[random.Next(colors.Length)];
+    }
+
+    private static void ContinueWithSpinner()
+    {
+        Console.SetCursorPosition(0, 8);
+        AnsiConsole.MarkupLine("[bold lime]By MEDEL | TIJOL | Tripole[/]");
+
+        AnsiConsole.Status()
+            .Start("Loading modules...", ctx =>
+            {
+                ctx.Spinner(Spinner.Known.Binary);
+                ctx.SpinnerStyle(Style.Parse("green"));
+                Thread.Sleep(3500);
+            });
+
+        Thread.Sleep(500);
+        Console.Clear();
+    }
 
     static void Main(string[] args)
     {
@@ -21,6 +80,9 @@ class Program
         {
             ShowTermsAndPromptUser();
         }
+
+        // Cool welcome animation
+        ShowWelcomeAnimation();
 
         LoginPage.PromptCredentials();
     }
