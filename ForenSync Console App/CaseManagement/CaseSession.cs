@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+
 namespace ForenSync_Console_App.CaseManagement
 {
     public static class CaseSession
@@ -154,6 +156,13 @@ namespace ForenSync_Console_App.CaseManagement
             string basePath = AppContext.BaseDirectory;
             string dbPath = Path.Combine(basePath, "forensync.db");
 
+            // Convert casePath to relative path
+            string casePathRelative = casePath
+                .Replace(basePath, "")
+                .TrimStart(Path.DirectorySeparatorChar);
+
+
+
             using var connection = new SqliteConnection($"Data Source={dbPath}");
             connection.Open();
 
@@ -167,7 +176,7 @@ namespace ForenSync_Console_App.CaseManagement
             command.Parameters.AddWithValue("$userId", userId);
             command.Parameters.AddWithValue("$notes", string.IsNullOrWhiteSpace(notes) ? "None" : notes);
             command.Parameters.AddWithValue("$date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            command.Parameters.AddWithValue("$path", casePath);
+            command.Parameters.AddWithValue("$path", casePathRelative);
 
             command.ExecuteNonQuery();
         }
