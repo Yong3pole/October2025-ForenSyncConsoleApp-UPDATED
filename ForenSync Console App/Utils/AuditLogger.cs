@@ -10,6 +10,7 @@ namespace ForenSync.Utils
     {
         Image,
         MemCapture,
+        AndroidAcquisition,
         ExportedSnapshot,
         AddUser,
         ChangePassword,
