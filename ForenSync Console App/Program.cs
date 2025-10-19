@@ -61,7 +61,7 @@ class Program
             {
                 ctx.Spinner(Spinner.Known.Binary);
                 ctx.SpinnerStyle(Style.Parse("green"));
-                Thread.Sleep(3500);
+                Thread.Sleep(2000);
             });
 
         Thread.Sleep(500);

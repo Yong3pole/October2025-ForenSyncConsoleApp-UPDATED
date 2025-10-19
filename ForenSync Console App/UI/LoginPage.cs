@@ -56,7 +56,8 @@ namespace ForenSync_Console_App.UI
                     if (showError)
                         AnsiConsole.MarkupLine("[red]❌ Invalid credentials. Please try again.[/]\n");
 
-                    AnsiConsole.MarkupLine("[green]Use ↑↓ to navigate, [[C]] to clear, [[F10]] to submit, [[Esc]] to exit.[/]\n");
+                    AnsiConsole.MarkupLine("[green]Use ↑↓ to navigate, [[Del]] to clear, [[Enter]] to submit, [[Esc]] to exit.[/]\n");
+                    Console.CursorVisible = false;
 
 
                     for (int i = 0; i < fields.Length; i++)
@@ -73,9 +74,9 @@ namespace ForenSync_Console_App.UI
                         fieldIndex = (fieldIndex - 1 + fields.Length) % fields.Length;
                     else if (key.Key == ConsoleKey.DownArrow)
                         fieldIndex = (fieldIndex + 1) % fields.Length;
-                    else if (key.Key == ConsoleKey.C)
+                    else if (key.Key == ConsoleKey.Delete)
                         fields[fieldIndex].Value = "";
-                    else if (key.Key == ConsoleKey.F10)
+                    else if (key.Key == ConsoleKey.Enter)
                         break;
                     else if (key.Key == ConsoleKey.Backspace && fields[fieldIndex].Value.Length > 0)
                         fields[fieldIndex].Value = fields[fieldIndex].Value[..^1];

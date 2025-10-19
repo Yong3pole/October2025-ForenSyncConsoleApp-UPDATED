@@ -189,7 +189,7 @@ namespace ForenSync_Console_App.UI
                     else
                     {
                         Console.Clear();
-                        Show(caseId, userId, false); // ✅ Reload main menu without summary
+                        Show(caseId, userId, isNewCase); // ✅ Reload main menu without summary
                     }
                     break;
 

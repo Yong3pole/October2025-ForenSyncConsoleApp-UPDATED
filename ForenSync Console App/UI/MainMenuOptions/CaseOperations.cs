@@ -14,6 +14,7 @@ namespace ForenSync_Console_App.UI.MainMenuOptions
             AsciiTitle.Render("ForenSync");
 
             bool isLinux = OperatingSystem.IsLinux();
+            bool hasActiveCase = !string.IsNullOrEmpty(caseId);
 
             if (isNewCase)
             {
@@ -72,9 +73,10 @@ namespace ForenSync_Console_App.UI.MainMenuOptions
             {
                 "📁 View Cases",
                 "💽 View Mounted Drives",
-                isLinux ? "🧠 Capture Memory (disabled)" : "🧠 Capture Memory",
-                isLinux ? "🧲 Image/Clone Drive or Partition" : "🧲 Image/Clone Drive or Partition",
-                isLinux ? "📱 Android Acquisition (disabled)" : "📱 Android Acquisition",
+                // Disable forensic operations based on OS AND case availability
+                isLinux || !hasActiveCase ? "🧠 Capture Memory (disabled)" : "🧠 Capture Memory",
+                isLinux || !hasActiveCase ? "🧲 Image/Clone Drive or Partition (disabled)" : "🧲 Image/Clone Drive or Partition",
+                isLinux || !hasActiveCase ? "📱 Android Acquisition (disabled)" : "📱 Android Acquisition",
                 "🔙 Back to Main Menu"
             };
 
