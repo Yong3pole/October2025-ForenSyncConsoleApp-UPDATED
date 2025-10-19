@@ -1,12 +1,13 @@
+using ForenSync.Utils;
+using Microsoft.Data.Sqlite;
 using Spectre.Console;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
-using Microsoft.Data.Sqlite;
-using System.Threading;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO.Compression;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
 {
@@ -25,19 +26,10 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
                     .Title("Proceed with Android acquisition?")
                     .AddChoices("✅ Start", "🔙 Cancel"));
 
-            if (confirm.Contains("Cancel"))
-            {
-                CaseOperations.Show(caseId, userId, isNewCase);
-                return;
-            }
+            if (confirm.Contains("Cancel")) return;
 
             _cts = new CancellationTokenSource();
-            Console.CancelKeyPress += (sender, e) =>
-            {
-                _cts.Cancel();
-                e.Cancel = true;
-                AnsiConsole.MarkupLine("[yellow]⏹ ESC pressed — canceling acquisition...[/]");
-            };
+            StartEscapeListener();
 
             string adbPath = Path.Combine(AppContext.BaseDirectory, "platform-tools", "adb.exe");
             if (!File.Exists(adbPath))
@@ -61,7 +53,6 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
                 KillAdbProcesses();
                 AnsiConsole.MarkupLine("[red]❌ No Android device detected. Make sure USB debugging is enabled and the device is connected.[/]");
                 Thread.Sleep(2500);
-                Run(caseId, userId, isNewCase);
                 return;
             }
 
@@ -89,14 +80,24 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
                 table.AddRow("Serial Number", serial);
                 AnsiConsole.Write(table);
 
+                bool cancelled = false;
                 AnsiConsole.Status()
                     .Spinner(Spinner.Known.Line)
                     .SpinnerStyle(Style.Parse("green"))
                     .Start("📦 Acquiring data from device...", ctx =>
                     {
-                        AcquireSystemData(adbPath, stagingPath);
-                        AcquireUserData(adbPath, stagingPath);
+                        try
+                        {
+                            AcquireSystemData(adbPath, stagingPath);
+                            AcquireUserData(adbPath, stagingPath);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            cancelled = true;
+                        }
                     });
+
+                if (cancelled) throw new OperationCanceledException();
 
                 string zipPath = Path.Combine(_acquisitionPath, "android_evidence.zip");
                 string imgPath = Path.Combine(_acquisitionPath, "android_evidence.img");
@@ -112,15 +113,16 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
                 AnsiConsole.MarkupLine($"Image saved: [italic]{Escape(imgPath)}[/]");
                 AnsiConsole.MarkupLine($"SHA-256: [bold]{hash}[/]");
                 AnsiConsole.MarkupLine($"Size: [bold]{FormatBytes(fileSize)}[/]");
-                AnsiConsole.MarkupLine("[grey]Press any key to return to Android acquisition menu...[/]");
+                AnsiConsole.MarkupLine("[grey]Press any key to return to menu...[/]");
                 Console.ReadKey(true);
             }
             catch (OperationCanceledException)
             {
                 SafeDelete(_acquisitionPath);
                 KillAdbProcesses();
-                AnsiConsole.MarkupLine("[yellow]⏹ Acquisition canceled by ESC. Folder deleted.[/]");
-                AnsiConsole.MarkupLine("[grey]Press any key to return to Android acquisition menu...[/]");
+                AuditLogger.Log(userId, AuditAction.AndroidAcquisition, $"Android acquisition cancelled for case: {caseId}");
+                AnsiConsole.MarkupLine("[yellow]⏹ Acquisition cancelled by user. Folder deleted.[/]");
+                AnsiConsole.MarkupLine("[grey]No data was saved. Press any key to return...[/]");
                 Console.ReadKey(true);
             }
             catch (Exception ex)
@@ -128,15 +130,16 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
                 SafeDelete(_acquisitionPath);
                 KillAdbProcesses();
                 AnsiConsole.MarkupLine($"[red]Error:[/] {Escape(ex.Message)}");
-                AnsiConsole.MarkupLine("[grey]Press any key to return to Android acquisition menu...[/]");
+                AnsiConsole.MarkupLine("[grey]Press any key to return to menu...[/]");
                 Console.ReadKey(true);
             }
 
             KillAdbProcesses();
             Console.ResetColor();
             Console.Clear();
-            CaseOperations.Show(caseId, userId, isNewCase);
         }
+
+        // ==== Acquisition Helpers ====
 
         private static void AcquireSystemData(string adbPath, string stagingPath)
         {
@@ -178,14 +181,8 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
                 {
                     Run(adbPath, $"pull --sync {folder} \"{targetPath}\"", _cts.Token);
                 }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch
-                {
-                    continue;
-                }
+                catch (OperationCanceledException) { throw; }
+                catch { continue; }
 
                 if (Directory.Exists(targetPath))
                 {
@@ -198,8 +195,6 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
             }
         }
 
-        // ==== Zip-as-Image Builder ====
-
         private static void CreateZipAsImg(string stagingPath, string zipPath, string imgPath)
         {
             if (File.Exists(zipPath)) File.Delete(zipPath);
@@ -207,6 +202,23 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
 
             ZipFile.CreateFromDirectory(stagingPath, zipPath, CompressionLevel.Fastest, includeBaseDirectory: false);
             File.Move(zipPath, imgPath);
+        }
+
+        private static void StartEscapeListener()
+        {
+            Task.Run(() =>
+            {
+                while (!_cts.IsCancellationRequested)
+                {
+                    if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
+                    {
+                        _cts.Cancel();
+                        AnsiConsole.MarkupLine("\n[red]❌ Acquisition cancelled by user.[/]");
+                        break;
+                    }
+                    Thread.Sleep(100);
+                }
+            });
         }
 
         // ==== Logging and Utilities ====
