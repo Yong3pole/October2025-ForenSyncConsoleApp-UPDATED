@@ -1,13 +1,13 @@
-using ForenSync.Utils;
-using Microsoft.Data.Sqlite;
 using Spectre.Console;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Security.Cryptography;
-using System.Text;
+using Microsoft.Data.Sqlite;
 using System.Threading;
+using System.Text;
 using System.Threading.Tasks;
+using System.IO.Compression;
+using ForenSync.Utils;
 
 namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
 {
@@ -57,11 +57,13 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
             }
 
             string evidenceDir = Path.Combine(AppContext.BaseDirectory, "Cases", caseId, "Evidence");
-            _acquisitionPath = Path.Combine(evidenceDir, "Android Acquisition");
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            _acquisitionPath = Path.Combine(evidenceDir, $"Android Acquisition {timestamp}");
             Directory.CreateDirectory(_acquisitionPath);
             string stagingPath = Path.Combine(_acquisitionPath, "staging");
             Directory.CreateDirectory(stagingPath);
 
+            AnsiConsole.MarkupLine($"[green]📁 Creating acquisition folder:[/] {Escape(_acquisitionPath)}");
             AnsiConsole.MarkupLine("[cyan]Acquiring device data...[/]");
             AnsiConsole.MarkupLine("[grey](Press ESC to cancel)[/]");
 
@@ -105,6 +107,7 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
 
                 string hash = ComputeFileSHA256(imgPath);
                 LogToDatabase(caseId, "android", "ADB Acquisition", imgPath, hash);
+                GenerateReadme(_acquisitionPath, hash);
 
                 Directory.Delete(stagingPath, true);
                 long fileSize = new FileInfo(imgPath).Length;
@@ -202,6 +205,16 @@ namespace ForenSync_Console_App.UI.MainMenuOptions.CaseOperations_SubMenu
 
             ZipFile.CreateFromDirectory(stagingPath, zipPath, CompressionLevel.Fastest, includeBaseDirectory: false);
             File.Move(zipPath, imgPath);
+        }
+
+        private static void GenerateReadme(string folderPath, string hash)
+        {
+            string readmePath = Path.Combine(folderPath, "README.txt");
+            File.WriteAllText(readmePath,
+                "This file was acquired as android_evidence.img\n" +
+                "You may rename it to .zip to view contents.\n" +
+                "Do not modify or re-zip the contents.\n" +
+                $"Original SHA-256 hash: {hash}\n");
         }
 
         private static void StartEscapeListener()
